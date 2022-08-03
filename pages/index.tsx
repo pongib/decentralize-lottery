@@ -4,6 +4,7 @@ import Image from "next/image"
 import styles from "../styles/Home.module.css"
 import ManualHeader from "../components/ManualHeader"
 import Header from "../components/Header"
+import LotteryEntrance from "../components/LotteryEntrance"
 
 const Home: NextPage = () => {
   return (
@@ -15,6 +16,7 @@ const Home: NextPage = () => {
       </Head>
       {/* <ManualHeader></ManualHeader> */}
       <Header></Header>
+      <LotteryEntrance></LotteryEntrance>
     </div>
   )
 }
