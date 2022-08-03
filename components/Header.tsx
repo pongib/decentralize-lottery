@@ -2,8 +2,11 @@ import { ConnectWallet } from "@web3uikit/web3"
 
 const Header = () => {
   return (
-    <div>
-      <ConnectWallet moralisAuth={false} />
+    <div className="p-5 border-b-2 flex flex-row">
+      <h1 className="py-4 px-4 font-bold text-3xl">Decentralize Lottery</h1>
+      <div className="ml-auto py-2 px-4">
+        <ConnectWallet moralisAuth={false} />
+      </div>
     </div>
   )
 }
