@@ -1,7 +1,8 @@
 import { useEffect, useState } from "react"
 import { useMoralis, useWeb3Contract } from "react-moralis"
 import { abi, contractAddress } from "../constants"
-import { BigNumber, ethers } from "ethers"
+import { BigNumber, ethers, ContractTransaction } from "ethers"
+import { useNotification } from "@web3uikit/core"
 
 interface contractAddressInterface {
   [key: string]: string[]
@@ -10,11 +11,10 @@ interface contractAddressInterface {
 const LotteryEntrance = () => {
   const addresses: contractAddressInterface = contractAddress
   const { chainId: chainIdHex, isWeb3Enabled } = useMoralis()
-  console.log("isWeb3Enabled", isWeb3Enabled)
   const chainId = parseInt(chainIdHex!).toString()
-  console.log("chainId", chainId)
   const raffleAddress = chainId in addresses ? addresses[chainId][0] : null
   const [entranceFee, setEntranceFee] = useState("0")
+  const dispatch = useNotification()
   const { runContractFunction: enterRaffle } = useWeb3Contract({
     abi,
     contractAddress: raffleAddress!,
@@ -29,23 +29,35 @@ const LotteryEntrance = () => {
     functionName: "getEntranceFee",
   })
 
-  async function handlerEnterBtn() {
-    if (isWeb3Enabled) {
-      const tx = await enterRaffle()
-      console.log(tx)
-    }
+  const handleSuccess = async (tx: ContractTransaction) => {
+    const txReceipt = await tx.wait()
+    console.log("txReceipt", txReceipt)
+    handleNotification()
+  }
+
+  const handleNotification = function () {
+    dispatch({
+      type: "info",
+      message: "Transaction Complete",
+      title: "Transaction Notification",
+      position: "topR",
+      // icon: "bell",
+    })
+  }
+
+  const handlerEnterBtn = async () => {
+    await enterRaffle({
+      onSuccess: (tx) => handleSuccess(tx as ContractTransaction),
+      onError: (error) => console.log(error),
+    })
   }
 
   useEffect(() => {
-    console.log("fired")
-
     if (isWeb3Enabled) {
       const getFee = async () => {
         const entranceFeeFromContract = (await getEntranceFee()) as BigNumber
-        console.log(entranceFeeFromContract)
-        setEntranceFee(
-          ethers.utils.formatEther(entranceFeeFromContract.toString())
-        )
+        console.log("entranceFeeFromContract", entranceFeeFromContract)
+        setEntranceFee(entranceFeeFromContract.toString())
       }
       getFee()
     }
@@ -53,8 +65,14 @@ const LotteryEntrance = () => {
 
   return (
     <div>
-      <div>Entrace Fee: {entranceFee}</div>
-      <button onClick={handlerEnterBtn}>Enter Raffle</button>
+      {raffleAddress ? (
+        <div>
+          <div>Entrace Fee: {ethers.utils.formatEther(entranceFee)}</div>
+          <button onClick={handlerEnterBtn}>Enter Raffle</button>
+        </div>
+      ) : (
+        <div>No Raffle Address Found</div>
+      )}
     </div>
   )
 }
